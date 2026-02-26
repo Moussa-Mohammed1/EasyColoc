@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('title');
             $table->decimal('amount');
             $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('colocation_id')->constrained('colocations');
             $table->timestamps();
         });
     }
