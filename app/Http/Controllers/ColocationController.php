@@ -14,7 +14,18 @@ class ColocationController extends Controller
      */
     public function index()
     {
-        //
+        $memberships = Membership::with(['colocation' => function ($query) {
+            $query->withCount('members');
+        }])
+            ->where('user_id', auth()->id())
+            ->orderByDesc('created_at')
+            ->get();
+
+        $activeMembership = $memberships->firstWhere('left_at','=', null);
+        $pastMemberships = $memberships->filter(fn ($membership) => $membership->left_at !== null);
+
+        return view('colocations', compact('activeMembership', 'pastMemberships')  
+        );
     }
 
     /**
