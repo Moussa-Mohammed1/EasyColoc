@@ -2,8 +2,8 @@
     class="fixed hidden inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 shadow-sm md:flex flex-col">
     <!-- Logo Area -->
     <div class="flex items-center gap-3 p-6 border-b border-slate-100">
-        <div class="bg-primary/10 text-primary p-2 rounded-lg">
-            <span class="material-symbols-outlined text-3xl">real_estate_agent</span>
+        <div class="bg-primary/10 text-primary  rounded-lg">
+           <img class="w-12 h-12 rounded-lg" src="https://i.pinimg.com/1200x/8f/0d/3b/8f0d3bb747fd0b24ce1cebe012a030b5.jpg" alt="">
         </div>
         <div class="flex flex-col">
             <h1 class="text-slate-900 text-lg font-bold leading-tight">EasyColoc</h1>
@@ -13,12 +13,12 @@
     <!-- Navigation -->
     <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
         <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium group transition-colors"
-            href="#">
+            href="{{ route('dashboard.index') }}">
             <span class="material-symbols-outlined filled">dashboard</span>
             Tableau de bord
         </a>
         <a class="flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900  px-3 py-2.5 rounded-lg text-primary font-medium group transition-colors"
-            href="#">
+            href="{{ route('colocations.index') }}">
             <span class="material-symbols-outlined filled">house</span>
             Colocations
         </a>
