@@ -8,9 +8,29 @@ use Illuminate\Http\Request;
 
 class ColocationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $colocations = Colocation::with(['user', 'members'])->latest()->paginate(15);
+        $query = Colocation::with(['user', 'members', 'expenses'])
+            ->withCount('members');
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $colocations = $query->latest()->paginate(15)->withQueryString();
 
         return view('admin.colocations.index', compact('colocations'));
     }
@@ -22,14 +42,5 @@ class ColocationController extends Controller
         return view('admin.colocations.show', compact('colocation'));
     }
 
-    public function updateStatus(Colocation $colocation, Request $request)
-    {
-        $request->validate([
-            'status' => 'required'
-        ]);
-
-        $colocation->update(['status' => $request->status]);
-        
-        return redirect()->back();
-    }
+    
 }
