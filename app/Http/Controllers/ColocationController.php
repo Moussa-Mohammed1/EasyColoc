@@ -54,9 +54,15 @@ class ColocationController extends Controller
             'colocation_id' => $c->id,
             'role' => 'owner'
         ]);
-        return redirect()->back();
+        return redirect()->route('dashboard.index');
     }
 
+    public function updateStatus(Colocation $colocation)
+    {
+        $colocation->update(['status' => 'canceled']);
+        $colocation->memberships()->update(['left_at' => now()]);
+        return redirect()->route('dashboard.index');
+    }
     /**
      * Display the specified resource.
      */
