@@ -17,28 +17,26 @@ class InvitationController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
+            'colocation_id' => 'required'
         ]);
-
-        $user = Auth::user();
-        $colocation = $user->colocations()->firstWhere('status', 'active');
         $token = Str::random(40);
 
         $invitation = Invitation::create([
             'email' => $request->email,
-            'colocation_id' => $colocation->id,
+            'colocation_id' => $request->colocation_id,
             'token' => $token,
             'status' => 'pending',
         ]);
 
         Mail::to($request->email)->send(new InvitationMail($invitation));
-        return back();
+        return redirect()->back();
     }
 
     public function accept($token)
     {
         $invitation = Invitation::with('colocation')->where('token', $token)->where('status', 'pending')->firstOrFail();
 
-        if (Auth::check()) {
+        if (User::firstWhere('email', $invitation->email)) {
             return view('invitation', ['invitation' => $invitation]);
         } else {
             session(['invitation_token' => $token]);
@@ -49,7 +47,7 @@ class InvitationController extends Controller
     public function process(Request $request, $token)
     {
         $invitation = Invitation::firstWhere('token',$token);
-        if (!User::where('email', $invitation->email)) {
+        if (!User::firstWhere('email', $invitation->email)) {
             session(['invitation_token' => $token]);
             return redirect()->route('register');
         }
@@ -57,10 +55,13 @@ class InvitationController extends Controller
         $invitation = Invitation::where('token', $token)->where('status', 'pending')->firstOrFail();
         
         if ($request->has('accept')) {
+            if (Auth::user()->memberships()->firstWhere('left_at', null)) {
+                return redirect()->route('dashboard.index')->with('existingColoc', 'Vous etes deja dans une colocation active');
+            }
             $user = Auth::user();
             if ($invitation->colocation->members->contains($user->id)) {
                 $invitation->update(['status' => 'accepted', 'responded_at' => now()]);
-                return redirect()->route('dashboard.index')->with('info', 'Vous êtes déjà membre de cette colocation.');
+                return redirect()->route('dashboard.index');
             }
 
             $invitation->colocation->members()->attach($user->id, ['role' => 'member']);
