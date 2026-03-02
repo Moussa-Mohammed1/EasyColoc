@@ -11,8 +11,7 @@ class UserController extends Controller
     public function remove(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'exists:users,id',
-            'owes' => 'array'
+            'user_id' => 'exists:users,id'
         ]);
         Membership::firstWhere('user_id',$validated['user_id'])->update([
             'isRemoved' => true,

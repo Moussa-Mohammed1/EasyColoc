@@ -68,7 +68,7 @@ class InvitationController extends Controller
 
             $invitation->update(['status' => 'accepted', 'responded_at' => now()]);
 
-            return redirect()->route('dashboard.index')->with('info', 'Bienvenue dans votre nouvelle colocation');
+            return redirect()->route('dashboard.index');
         }
 
         if ($request->has('refuse')) {

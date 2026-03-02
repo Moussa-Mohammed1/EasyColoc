@@ -36,6 +36,17 @@ class ColocationController extends Controller
         
     }
 
+    public function quit(Request $request)
+    {
+        $validated = $request->validate([
+            'colocation_id' => 'required'
+        ]);
+        Membership::where('user_id',auth()->id())
+                    ->where('colocation_id', $validated['colocation_id'])
+                    ->update(['left_at' => now()]);
+        return redirect()->route('dashboard.index');
+    }
+
     /**
      * Store a newly created resource in storage.
      */

@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         if ($user->isBanned) {
@@ -51,6 +51,10 @@ class DashboardController extends Controller
             if ($colocation->status !== 'active') {
                 return view('dashboard')->with('status', 'votre derniere colocation a été annulé le ' . $colocation->updated_at->format('M d Y'));
             }
+            
+            $filteredExpenses = self::filterExpensesByDate($colocation->expenses, $request);
+            $colocation->filteredExpenses = $filteredExpenses;
+            
             $userExpenses = $colocation->expenses->where('user_id', '=', $userId)->sum('amount');
 
             $totalExpenses = $colocation->expenses->sum('amount');
@@ -111,7 +115,7 @@ class DashboardController extends Controller
                 $debtor = array_shift($debtors);
                 $creditor = array_shift($creditors);
 
-                $amount = min($debtor['amount'], $creditor['amount']);
+                $amount = min(abs($debtor['amount']), $creditor['amount']);
 
                 $creditorExpense = $colocation->expenses->where('user_id', $creditor['user']->id)->first();
 
@@ -126,41 +130,61 @@ class DashboardController extends Controller
                 $creditor['amount'] -= $amount;
                 $owes = self::clearRemovedMembersOwes($owes, $colocation);
             }
-            return view('dashboard', compact('colocation', 'role', 'userExpenses', 'userSolde', 'activeDebts', 'totalExpenses', 'owes'));
+            
+            $selectedMonth = $request->input('month', '');
+            $selectedYear = $request->input('year', '');
+            
+            return view('dashboard', compact('colocation', 'role', 'userExpenses', 'userSolde', 'activeDebts', 'totalExpenses', 'owes', 'selectedMonth', 'selectedYear'));
         }
 
         return view('dashboard', ['colocation' => null]);
     }
 
+    private static function filterExpensesByDate($expenses, Request $request)
+    {
+        $month = $request->input('month');
+        $year = $request->input('year');
+
+        if (!$month || !$year) {
+            return $expenses;
+        }
+
+        return $expenses->filter(function ($expense) use ($month, $year) {
+            $expenseDate = \Carbon\Carbon::parse($expense->created_at);
+            return $expenseDate->format('m') === $month && $expenseDate->format('Y') === $year;
+        });
+    }
+
     private static function clearRemovedMembersOwes($owes, $colocation)
     {
         $owner = $colocation->members->firstWhere('pivot.role', 'owner');
-        if (!$owner) {
-            return $owes;
-        }
-        foreach ($owes as &$owe) {
-            if ($owe['from']->pivot->isRemoved) {
-                $owe['from'] = $owner;
-            }
-            if ($owe['to']->pivot->isRemoved) {
-                $owe['to'] = $owner;
-            }
-        }
-        unset($owe);
-        $consolidatedOwes = [];
+
+        $consolidated = [];
+
         foreach ($owes as $owe) {
-            if ($owe['from']->id === $owe['to']->id) {
+            // remplacer les dettes des membres retirer aux owner
+            $from = $owe['from']->pivot->isRemoved ? $owner : $owe['from'];
+            $to = $owe['to']->pivot->isRemoved ? $owner : $owe['to'];
+            
+            // en cas d'un membre a une dettes aux owner 
+            if ($from->id === $to->id) {
                 continue;
             }
 
-            $key = $owe['from']->id . 'a' . $owe['to']->id;
-            if (isset($consolidatedOwes[$key])) {
-                $consolidatedOwes[$key]['amount'] += $owe['amount'];
+            // en cas des dettes duplicer entre les memes users 
+            $key = $from->id . '_' . $to->id;
+            if (isset($consolidated[$key])) {
+                $consolidated[$key]['amount'] += $owe['amount'];
             } else {
-                $consolidatedOwes[$key] = $owe;
+                $consolidated[$key] = [
+                    'from' => $from,
+                    'to' => $to,
+                    'amount' => $owe['amount'],
+                    'expense_id' => $owe['expense_id'] ?? null
+                ];
             }
         }
 
-        return array_values($consolidatedOwes);
+        return array_values($consolidated);
     }
 }
