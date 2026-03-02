@@ -55,9 +55,12 @@
                             <span class="material-symbols-outlined">menu</span>
                         </button>
                         <!-- Search Bar -->
-                        <h1 class="text-lg ">Colocation Actuelle : <strong>{{ $colocation?->name }}</strong></h1>
+                         @if (isset($colocation))
+                          <h1 class="text-lg ">Colocation Actuelle : <strong>{{ $colocation?->name }}</strong></h1>
+                         @endif
+                       
                     </div>
-                    @if (!$colocation)
+                    @if (!isset($colocation))
                         <button onclick="openModal()"
                             class="inline-flex mr-5 items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary duration-500 transition-colors">
                             <span class="material-symbols-outlined mr-2">add</span>
@@ -68,6 +71,27 @@
                             class="inline-flex mr-5 items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary duration-500 transition-colors">
                             Inviter à la colocation
                         </button>
+                        @if ($colocation->members->where('id', '=', auth()->id())->first()->pivot->role === 'owner')
+                        <form action="{{ route('colocations.updateStatus', $colocation->id) }}" method="POST">
+                            @csrf
+                            <button
+                                type="submit"
+                                class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-red-500 mr-3 hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                                Annuler la colocation
+                            </button>
+                        </form>
+                        @else
+                            <form action="{{ route('colocations.quit') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="colocation_id" value="{{ $colocation->id }}">
+                            <button
+                                type="submit"
+                                class="inline-flex items-center justify-center px-2 py-1 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-red-500 mr-3 hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                                Quitter la colocation<span></span>
+                            </button>
+                        </form>
+                        @endif
+
                     @endif
 
                     <div class="flex items-center gap-4">
@@ -76,9 +100,10 @@
 
                             {{ $role ?? 'member'}}
                     </div>
+
                 </div>
             </header>
-            @if ($colocation)
+            @if (isset($colocation))
                         <div class="p-6 space-y-6 overflow-y-auto">
                             <!-- Welcome Section -->
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -86,6 +111,12 @@
                                     <h2 class="text-2xl font-bold text-slate-900">Bon retour, {{ auth()->user()->name }} !</h2>
                                     <p class="text-slate-500">Voici ce qui se passe dans votre colocation aujourd'hui.</p>
                                 </div>
+                                @if (session('info'))
+                                    <p class="px-5 py-3 bg-green-400 text white text-white">{{ session('info') }}</p>
+                                @endif
+                                @if (session('existingColoc'))
+                                    <p class="px-5 py-3 bg-red-400 text white text-white">{{ session('existingColoc') }}</p>
+                                @endif
                                 @if ($colocation)
                                     <div class="flex gap-2">
                                         @if ($colocation->members->where('id', '=', auth()->id())->first()->pivot->role === 'owner')
@@ -100,6 +131,7 @@
                                             <span class="material-symbols-outlined mr-2">add</span>
                                             Ajouter une dépense
                                         </button>
+
                                     </div>
                                 @endif
                             </div>
@@ -110,9 +142,7 @@
                                     class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                                     <div class="flex items-center justify-between mb-4">
                                         <h3 class="text-slate-500 text-sm font-medium">Votre Total Dépensé</h3>
-                                        <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                            <span class="material-symbols-outlined">payments</span>
-                                        </div>
+                                       
                                     </div>
                                     <div class="flex items-baseline gap-2">
                                         <span class="text-2xl font-bold text-slate-900">€{{ $userExpenses }}</span>
@@ -124,9 +154,7 @@
                                     class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                                     <div class="flex items-center justify-between mb-4">
                                         <h3 class="text-slate-500 text-sm font-medium">Votre Balance</h3>
-                                        <div class="p-2 bg-green-50 text-success rounded-lg">
-                                            <span class="material-symbols-outlined">account_balance_wallet</span>
-                                        </div>
+                                        
                                     </div>
                                     <div class="flex items-baseline gap-2">
                                         <span
@@ -139,9 +167,7 @@
                                     class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                                     <div class="flex items-center justify-between mb-4">
                                         <h3 class="text-slate-500 text-sm font-medium">Total des Dépenses de la Colocation</h3>
-                                        <div class="p-2 bg-purple-50 text-purple-600 rounded-lg">
-                                            <span class="material-symbols-outlined">home</span>
-                                        </div>
+                                       
                                     </div>
                                     <div class="flex items-baseline gap-2">
                                         <span class="text-2xl font-bold text-slate-900">€{{  $totalExpenses }}</span>
@@ -153,9 +179,7 @@
                                     class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                                     <div class="flex items-center justify-between mb-4">
                                         <h3 class="text-slate-500 text-sm font-medium">Vos Dettes Actives</h3>
-                                        <div class="p-2 bg-red-50 text-danger rounded-lg">
-                                            <span class="material-symbols-outlined">trending_down</span>
-                                        </div>
+                                        
                                     </div>
                                     <div class="flex items-baseline gap-2">
                                         <span
@@ -172,18 +196,40 @@
                                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                                         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                                             <h3 class="text-lg font-bold text-slate-900">Dépenses Récentes</h3>
-                                            <div class="relative">
-                                                <select
-                                                    class="appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 pr-8">
-                                                    <option>Ce mois-ci</option>
-                                                    <option>Le mois dernier</option>
-                                                    <option>Tout le temps</option>
-                                                </select>
-                                                <div
-                                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700">
-                                                    <span class="material-symbols-outlined text-sm">expand_more</span>
+                                            <form method="GET" action="{{ route('dashboard.index') }}" class="flex gap-2">
+                                                <div class="relative">
+                                                    <select name="month"
+                                                        class="appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 pr-8">
+                                                        <option value="">Tous les mois</option>
+                                                        <option value="01" {{ $selectedMonth == '01' ? 'selected' : '' }}>Janvier</option>
+                                                        <option value="02" {{ $selectedMonth == '02' ? 'selected' : '' }}>Février</option>
+                                                        <option value="03" {{ $selectedMonth == '03' ? 'selected' : '' }}>Mars</option>
+                                                        <option value="04" {{ $selectedMonth == '04' ? 'selected' : '' }}>Avril</option>
+                                                        <option value="05" {{ $selectedMonth == '05' ? 'selected' : '' }}>Mai</option>
+                                                        <option value="06" {{ $selectedMonth == '06' ? 'selected' : '' }}>Juin</option>
+                                                        <option value="07" {{ $selectedMonth == '07' ? 'selected' : '' }}>Juillet</option>
+                                                        <option value="08" {{ $selectedMonth == '08' ? 'selected' : '' }}>Août</option>
+                                                        <option value="09" {{ $selectedMonth == '09' ? 'selected' : '' }}>Septembre</option>
+                                                        <option value="10" {{ $selectedMonth == '10' ? 'selected' : '' }}>Octobre</option>
+                                                        <option value="11" {{ $selectedMonth == '11' ? 'selected' : '' }}>Novembre</option>
+                                                        <option value="12" {{ $selectedMonth == '12' ? 'selected' : '' }}>Décembre</option>
+                                                    </select>
+                                                    
                                                 </div>
-                                            </div>
+                                                <div class="relative">
+                                                    <select name="year"
+                                                        class="appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 pr-8">
+                                                        <option value="">Toutes les années</option>
+                                                        @for ($y = date('Y'); $y >= 2020; $y--)
+                                                            <option value="{{ $y }}" {{ $selectedYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                                        @endfor
+                                                    </select>
+                                                </div>
+                                                <button type="submit" 
+                                                    class="px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-primary transition-colors">
+                                                    Filtrer
+                                                </button>
+                                            </form>
                                         </div>
                                         <div class="overflow-x-auto">
                                             <table class="w-full text-sm text-left text-slate-500">
@@ -198,10 +244,14 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @if (empty($colocation->expenses))
-                                                        <p>no exp</p>
+                                                    @if (empty($colocation->filteredExpenses) || $colocation->filteredExpenses->count() === 0)
+                                                        <tr>
+                                                            <td colspan="6" class="px-6 py-8 text-center text-slate-500">
+                                                                Aucune dépense pour cette période
+                                                            </td>
+                                                        </tr>
                                                     @else
-                                                        @foreach ($colocation->expenses as $expense)
+                                                        @foreach ($colocation->filteredExpenses as $expense)
                                                             <tr class="bg-white border-b border-slate-100 hover:bg-slate-50">
                                                                 <td class="px-6 py-4 font-medium text-slate-900">
                                                                     {{ $expense->title }}
@@ -237,7 +287,7 @@
                                                                             </button>
                                                                         </form>
                                                                     @else
-                                                                        
+
                                                                     @endif
                                                                 </td>
                                                             </tr>
@@ -250,7 +300,9 @@
                                     </div>
                                     <!-- Flatmates Section -->
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-900 mb-4 px-1">Colocataires</h3>
+                                        <h3 class="text-lg font-bold text-slate-900 mb-4 px-1">Colocataires <small
+                                                class="text-slate-500">(En retirant un membre, ses dettes deviennent les
+                                                vôtres)</small> </h3>
                                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 
                                             @if (empty($colocation->members))
@@ -264,8 +316,12 @@
                                                             style="background-image: url('https://i.pinimg.com/1200x/1e/c6/4e/1ec64e2e926f1ab6c553963b86578886.jpg');">
                                                         </div>
                                                         <div class="flex-1 min-w-0">
-                                                            <p class="text-sm font-bold text-slate-900 truncate">@if ($member->isAdmin)<span class="material-symbols-outlined text-sm text-yellow-500 pr-1">crown</span>@endif{{ $member->name }}</p>
-                                                            <p class="text-xs text-slate-500">{{ $member->isAdmin ? 'Platform Admin' . ' + ' . ucfirst($member->pivot->role) : ucfirst($member->pivot->role)}}</p>
+                                                            <p class="text-sm font-bold text-slate-900 truncate">@if ($member->isAdmin)<span
+                                                            class="material-symbols-outlined text-sm text-yellow-500 pr-1">crown</span>@endif{{ $member->name }}
+                                                            </p>
+                                                            <p class="text-xs text-slate-500">
+                                                                {{ $member->isAdmin ? 'Platform Admin' . ' + ' . ucfirst($member->pivot->role) : ucfirst($member->pivot->role)}}
+                                                            </p>
                                                         </div>
                                                         <div class="text-right">
                                                             <span
@@ -273,12 +329,11 @@
                                                                 {{ $member->reputation_score >= 0 ? '+' . $member->reputation_score : '-' . $member->reputation_score  }}
                                                             </span>
                                                         </div>
-                                                        
+
                                                         @if ($member->pivot->role === 'member' && $member->pivot->firstWhere('role', 'owner')->user_id === auth()->id())
                                                             <form action="{{ route('user.remove')}}" method="POST">
                                                                 @csrf
                                                                 <input type="hidden" name="user_id" value="{{ $member->id }}">
-                                                                <input type="hidden" name="amount" value="">
                                                                 <button class="text-right " type="submit">
                                                                     <span
                                                                         class="inline-flex items-center hover:bg-slate-100 px-2 py-2 transition rounded text-xs font-medium bg-green-100 text-green-800">
@@ -347,9 +402,6 @@
                                                         </div>
                                                     </div>
                                                 @elseif($owe['to']->id !== auth()->id() && $owe['from']->id !== auth()->id())
-                                                    <div class="text-center py-8">
-                                                        <p class="text-xs text-slate-500 mt-1">Aucune dette active</p>
-                                                    </div>
                                                 @endif
                                             @empty
                                                 <div class="text-center py-8">
@@ -380,6 +432,7 @@
                                 <label for="invite-email" class="block text-sm font-medium text-slate-700 mb-2">
                                     Adresse email du colocataire <span class="text-danger">*</span>
                                 </label>
+                                <input type="hidden" name="colocation_id" value="{{ $colocation->id }}">
                                 <input type="email" id="invite-email" name="email" required
                                     class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                     placeholder="exemple@mail.com">
@@ -399,23 +452,26 @@
                     </div>
                 </div>
             @else
-                <div class="p-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
-                    <div class="text-center max-w-md">
-                        <div class="mb-6">
-                            <div class="inline-flex items-center justify-center w-24 h-24 bg-blue-50 rounded-full mb-4">
-                                <span class="material-symbols-outlined text-5xl text-primary">home</span>
-                            </div>
-                            <h2 class="text-2xl font-bold text-slate-900 mb-2">Aucune colocation active</h2>
-                            <p class="text-slate-500 mb-6">Commencez par créer votre première colocation pour gérer vos dépenses partagées.</p>
-                        </div>
-                        <button onclick="openModal()"
-                            class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
-                            <span class="material-symbols-outlined mr-2">add</span>
-                            Créez votre colocation
-                        </button>
+        <div class="p-6 flex items-center justify-center min-h-[calc(100vh-5rem)]">
+            <div class="text-center max-w-md">
+                <div class="mb-6">
+                    <div class="inline-flex items-center justify-center w-24 h-24 bg-blue-50 rounded-full mb-4">
+                        <span class="material-symbols-outlined text-5xl text-primary">home</span>
                     </div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Aucune colocation active</h2>
+                    @if (session('status'))
+                    <p class="text-slate-500 mb-6">{{ session('status') }}</p>
+                    @endif
+                    
                 </div>
-            @endif
+                <button onclick="openModal()"
+                    class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                    <span class="material-symbols-outlined mr-2">add</span>
+                    Créez votre colocation
+                </button>
+            </div>
+        </div>
+    @endif
     <script>
         function openInviteModal() {
             let modal = document.getElementById('invite-modal');

@@ -30,7 +30,7 @@
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Administration</p>
             </div>
             <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium transition-colors"
-                href="#">
+                href="/admin/dashboard">
                 <span class="material-symbols-outlined">settings</span>
                 Admin
             </a>

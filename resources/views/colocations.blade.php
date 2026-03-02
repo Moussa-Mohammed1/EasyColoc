@@ -111,7 +111,7 @@
                                 <div class="space-y-3 text-sm text-slate-600 dark:text-slate-400">
                                     <div class="flex items-center gap-3">
                                         <span class="material-symbols-outlined text-lg">calendar_today</span>
-                                        <span>Rejoint le: {{ $membership->created_at->format('d M Y') }}</span>
+                                        <span>Rejoint le: {{ $membership?->created_at?->format('d M Y') }}</span>
                                     </div>
                                     <div class="flex items-center gap-3">
                                         <span class="material-symbols-outlined text-lg">event_busy</span>
