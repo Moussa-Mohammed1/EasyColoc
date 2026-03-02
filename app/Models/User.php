@@ -29,7 +29,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'isOwner',
         'isAdmin',
+        'isBanned',
     ];
 
     /**
@@ -63,16 +65,19 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'isAdmin' => 'boolean',
+            'isOwner' => 'boolean',
+            'isBanned' => 'boolean',
         ];
     }
-    public function Memberships()
+    public function memberships()
     {
         return $this->hasMany(Membership::class);
     }
 
-    public function Colocations()
+    public function colocations()
     {
-        return $this->hasMany(Colocation::class);
+        return $this->hasMany(Colocation::class, 'owner_id');
     }
 
     public function categories()
