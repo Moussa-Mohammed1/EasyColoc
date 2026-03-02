@@ -16,7 +16,7 @@ return new class extends Migration
             $table->decimal('amount');
             $table->timestamp('paid_at')->nullable();
             $table->foreignId('payer_id')->constrained('users');
-            $table->foreignId('expense_id')->constrained('expenses');
+            $table->foreignId('expense_id')->constrained('expenses')->cascadeOnDelete();
             $table->timestamps();
         });
     }
