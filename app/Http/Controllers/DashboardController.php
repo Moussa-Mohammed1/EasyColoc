@@ -128,8 +128,16 @@ class DashboardController extends Controller
 
                 $debtor['amount'] += $amount;
                 $creditor['amount'] -= $amount;
-                $owes = self::clearRemovedMembersOwes($owes, $colocation);
+
+                if ($debtor['amount'] < 0) {
+                    array_unshift($debtors, $debtor);
+                }
+                if ($creditor['amount'] > 0) {
+                    array_unshift($creditors, $creditor);
+                }
             }
+            
+            $owes = self::clearRemovedMembersOwes($owes, $colocation);
             
             $selectedMonth = $request->input('month', '');
             $selectedYear = $request->input('year', '');

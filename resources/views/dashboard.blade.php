@@ -354,23 +354,34 @@
                                         <h3 class="text-lg font-bold text-slate-900 mb-6">Qui Doit à Qui</h3>
                                         <div class="space-y-6">
                                             @forelse($owes as $owe)
-                                                @if($owe['from']->id === auth()->id())
-                                                    <!-- You Owe Someone -->
-                                                    <div class="flex flex-col gap-3 pb-6 border-b border-slate-100 last:border-0 last:pb-0">
-                                                        <div class="flex items-center justify-between">
-                                                            <div class="flex items-center gap-3">
-                                                                <div
-                                                                    class="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                                                                    <span class="material-symbols-outlined">person</span>
-                                                                </div>
-                                                                <div>
-                                                                    <p class="text-sm font-medium text-slate-900"><strong>Vous</strong>
-                                                                        devez à <strong>{{ $owe['to']->name }}</strong></p>
-                                                                </div>
+                                                <div class="flex flex-col gap-3 pb-6 border-b border-slate-100 last:border-0 last:pb-0">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex items-center gap-3">
+                                                            <div
+                                                                class="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                                                                <span class="material-symbols-outlined">person</span>
                                                             </div>
-                                                            <p class="text-base font-bold text-danger">
-                                                                €{{$owe['amount'] }}</p>
+                                                            <div>
+                                                                @if($owe['from']->id === auth()->id())
+                                                                    <p class="text-sm font-medium text-slate-900">
+                                                                        <strong>Vous</strong> devez à <strong>{{ $owe['to']->name }}</strong>
+                                                                    </p>
+                                                                @elseif($owe['to']->id === auth()->id())
+                                                                    <p class="text-sm font-medium text-slate-900">
+                                                                        <strong>{{ $owe['from']->name }}</strong> vous doit
+                                                                    </p>
+                                                                @else
+                                                                    <p class="text-sm font-medium text-slate-900">
+                                                                        <strong>{{ $owe['from']->name }}</strong> doit à <strong>{{ $owe['to']->name }}</strong>
+                                                                    </p>
+                                                                @endif
+                                                            </div>
                                                         </div>
+                                                        <p class="text-base font-bold {{ $owe['to']->id === auth()->id() ? 'text-success' : 'text-danger' }}">
+                                                            {{ $owe['to']->id === auth()->id() ? '+' : '' }}€{{ number_format($owe['amount'], 2) }}
+                                                        </p>
+                                                    </div>
+                                                    @if($owe['from']->id === auth()->id())
                                                         <form action="{{ route('payments.store') }}" method="POST">
                                                             @csrf
                                                             <input type="hidden" name="payer_id" value="{{ $owe['from']->id }}">
@@ -382,27 +393,8 @@
                                                                 Marquer comme Payé
                                                             </button>
                                                         </form>
-                                                    </div>
-                                                @elseif($owe['to']->id === auth()->id())
-                                                    <!-- Someone Owes You -->
-                                                    <div class="flex flex-col gap-3 pb-6 border-b border-slate-100 last:border-0 last:pb-0">
-                                                        <div class="flex items-center justify-between">
-                                                            <div class="flex items-center gap-3">
-                                                                <div
-                                                                    class="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                                                                    <span class="material-symbols-outlined">person</span>
-                                                                </div>
-                                                                <div>
-                                                                    <p class="text-sm font-medium text-slate-900">{{ $owe['from']->name }}
-                                                                        vous doit</p>
-                                                                </div>
-                                                            </div>
-                                                            <p class="text-base font-bold text-success">
-                                                                +€{{ number_format($owe['amount'], 2) }}</p>
-                                                        </div>
-                                                    </div>
-                                                @elseif($owe['to']->id !== auth()->id() && $owe['from']->id !== auth()->id())
-                                                @endif
+                                                    @endif
+                                                </div>
                                             @empty
                                                 <div class="text-center py-8">
                                                     <p class="text-xs text-slate-500 mt-1">Aucune dette active</p>

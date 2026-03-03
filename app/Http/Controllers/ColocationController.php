@@ -56,7 +56,7 @@ class ColocationController extends Controller
         $owner_id = auth()->user()->id;
         $c = Colocation::create([
             'name'=> $validated['name'],
-            'description' => $validated['description'] ?? null,
+            'description' => $validated['description'] ?? 'no description yet!',
             'owner_id' => $owner_id,
             'status' => 'active',
         ]);
